@@ -8,7 +8,8 @@ XY_CAM    = 0          # bottom camera (bore -> X/Y). Was cam1 in older recordin
 YZ_CAM    = 1          # side camera (bottom of shaft -> Z, plus a coarse horizontal pre-center)
 XY_ZOOM   = 2.75       # Pi digital zoom, set automatically. The 10.8.26 footage (1.0px bore detection) is ~2.75x
 YZ_ZOOM   = 1.0        # side detection was tested at 1x
-ARM_IP    = "192.168.0.3"
+ARM_IPS   = {1: "192.168.0.3", 2: "192.168.0.4", 3: "192.168.0.5"}   # --arm N, same numbering as the GUI
+ARM_ROLES = {1: "extruder", 2: "light pipe", 3: "pick-and-place"}
 
 GAIN         = 3.0     # 1/s — commanded speed = GAIN x remaining distance (from the calibrated Jacobians)
 DEAD_BAND    = 5       # px — XY done within this radius of the bottom-cam crosshair
@@ -166,8 +167,18 @@ def open_stream(idx, stop):
     return cap, grab
 
 
-def main():
+def main(arm=1):
     import rtde_control, rtde_receive
+
+    ip = ARM_IPS[arm]
+    try:
+        ctrl = rtde_control.RTDEControlInterface(ip)
+        recv = rtde_receive.RTDEReceiveInterface(ip)
+    except Exception as e:
+        raise SystemExit(f"Can't connect to arm {arm} ({ARM_ROLES[arm]}) at {ip}: {e}\n"
+                         f"Check it's powered on, reachable (ping {ip}) and in Remote Control mode, "
+                         f"or pick another arm with --arm.")
+    print(f"Connected to arm {arm} ({ARM_ROLES[arm]}) at {ip}")
 
     stop = threading.Event()
     set_zoom()
@@ -180,8 +191,6 @@ def main():
         raw_xy, raw_yz = grab_xy, grab_yz
         grab_xy = lambda: strip_crosshair(raw_xy())
         grab_yz = lambda: strip_crosshair(raw_yz())
-    ctrl = rtde_control.RTDEControlInterface(ARM_IP)
-    recv = rtde_receive.RTDEReceiveInterface(ARM_IP)
     print(f"XY = cam{XY_CAM} (left panel), YZ = cam{YZ_CAM} (right panel) — swap XY_CAM/YZ_CAM if they look wrong")
     print(f"Zoom set on the Pi: XY {XY_ZOOM}x, side {YZ_ZOOM}x (re-applied before calibrating and when arming)")
     print("Side cam first (Z exact, horizontal coarse), then the bottom cam centers X/Y. Translation only.")
@@ -385,16 +394,20 @@ def _is_xy_video(path):
 
 
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    args = sys.argv[1:]
-    if len(args) == 0:
-        main()
-    elif len(args) == 1:
-        test_video(args[0])
+    ap = argparse.ArgumentParser(description="Center the needle tip with both cameras, or replay videos offline.")
+    ap.add_argument("videos", nargs="*", help="offline test (no robot): XY video and optional YZ video")
+    ap.add_argument("--arm", type=int, choices=sorted(ARM_IPS), default=1,
+                    help="arm to drive: " + ", ".join(f"{n} = {ARM_IPS[n]} ({ARM_ROLES[n]})" for n in ARM_IPS))
+    args = ap.parse_args()
+    if not args.videos:
+        main(args.arm)
+    elif len(args.videos) == 1:
+        test_video(args.videos[0])
     else:
         # cam0/cam1 numbering has flipped between sessions, so pick XY by its zoom tag (or "xy" in the name)
-        xy_path, yz_path = sorted(args[:2], key=lambda p: not _is_xy_video(p))
+        xy_path, yz_path = sorted(args.videos[:2], key=lambda p: not _is_xy_video(p))
         print(f"XY (bore):  {os.path.basename(xy_path)}")
         print(f"YZ (side):  {os.path.basename(yz_path)}")
         test_video(xy_path, yz_path)
