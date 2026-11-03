@@ -18,7 +18,8 @@ SIDE_H_TOL   = 50      # px — side-cam columns; only a coarse pre-center, the 
 MAX_SPEED    = 0.020   # m/s (20 mm/s)
 ACCEL        = 0.5     # m/s²
 STEP_TIME    = 0.10    # s per speedL command
-CAL_DIST     = 0.003   # m per calibration jog (3 mm) — needs to be large enough for reliable px measurement
+CAL_DIST     = 0.0005  # m per calibration jog (0.5 mm); each snapshot is a median of CAL_FRAMES detections
+CAL_FRAMES   = 5       # so the few-px side-cam shift isn't swamped by single-frame noise
 TRAVEL_LIMIT = 0.010   # m — servo disarms if the TCP moves further than this from where it was armed
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -99,15 +100,22 @@ def calibrate(ctrl, grab_xy, grab_yz, last_tip):
     Returns {"xy_inv": 2x2, "side_pinv": 3x2, "kz": side rows per m of Z}, or None on failure."""
     def snap():
         time.sleep(0.08)
-        return detect_bottom(grab_xy(), last_tip)[0], detect_side(grab_yz())[0]
+        bs, ss = [], []
+        for _ in range(CAL_FRAMES):
+            b, s = detect_bottom(grab_xy(), last_tip)[0], detect_side(grab_yz())[0]
+            if b is not None: bs.append(b)
+            if s is not None: ss.append(s)
+            time.sleep(0.04)                      # let the stream deliver a new frame
+        med = lambda pts: tuple(np.median(pts, axis=0)) if len(pts) > CAL_FRAMES // 2 else None
+        return med(bs), med(ss)
 
     def jog(v):
-        spd = 0.005
+        spd = 0.0025                              # 2.5 mm/s -> 0.2 s per 0.5 mm jog
         t   = CAL_DIST / spd
         ctrl.speedL([x * spd for x in v], ACCEL, t)
         time.sleep(t + 0.15)
 
-    print(f"Calibrating — keep the tip in both views (jogs +X, +Y, +Z by {CAL_DIST*1000:.0f} mm, translation only)...")
+    print(f"Calibrating — keep the tip in both views (jogs +X, +Y, +Z by {CAL_DIST*1000:g} mm, translation only)...")
     cols_xy, cols_side = [], []
     for axis, name in enumerate("XYZ"):
         b0, s0 = snap()
