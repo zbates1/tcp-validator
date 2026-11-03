@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import cv2, numpy as np, time, threading, os, re
+import cv_algorithms as cva
 from cv_algorithms import *
 
 # ── Config ────────────────────────────────────────────────────────────────────
 PI_HOST, PI_PORT = "192.168.0.21", 8080
 XY_CAM    = 0          # bottom camera (bore -> X/Y). Was cam1 in older recordings; swap if panels look wrong
-YZ_CAM    = 1          # side camera (bottom of shaft -> Z, plus a coarse horizontal pre-center)
+YZ_CAM    = 1          # side camera (bottom of shaft -> Z)
 XY_ZOOM   = 2.75       # Pi digital zoom, set automatically. The 10.8.26 footage (1.0px bore detection) is ~2.75x
 YZ_ZOOM   = 1.0        # side detection was tested at 1x
 ARM_IPS   = {1: "192.168.0.3", 2: "192.168.0.4", 3: "192.168.0.5"}   # --arm N, same numbering as the GUI
@@ -13,10 +14,10 @@ ARM_ROLES = {1: "extruder", 2: "light pipe", 3: "pick-and-place"}
 
 GAIN         = 3.0     # 1/s — XY speed = GAIN x remaining distance (from the calibrated bottom-cam Jacobian)
 DEAD_BAND    = 5       # px — XY done within this radius of the bottom-cam crosshair
-Z_DEAD_BAND  = 5       # px — Z done when the shaft bottom is within this many rows of the side-cam center row
+Z_DEAD_BAND  = 1.5     # px — Z done when the shaft bottom is within this many rows of the side-cam center line
+Z_SETTLE     = 8       # frames the bottom must stay inside Z_DEAD_BAND (robot stopped) before Z counts as aligned
 Z_GAIN       = 3e-5    # m/s per px of side-cam row error (100 px -> 3 mm/s). Only up/down is needed, no calibration
-Z_MIN_SPEED  = 0.0003  # m/s — so the last few px don't crawl
-Z_MAX_SPEED  = 0.003   # m/s
+Z_MAX_SPEED  = 0.003   # m/s. No minimum: speed shrinks with the error, so it eases onto the line, no overshoot
 SIDE_FLIPPED = False   # True if the side cam is upside down (tip goes DOWN on screen when the arm goes up)
 MAX_SPEED    = 0.020   # m/s (20 mm/s) — XY servo cap and manual jog speed
 ACCEL        = 0.5     # m/s²
@@ -31,7 +32,7 @@ def z_velocity(e_side):
     """Step 1 (z key): robot Z only, from the side cam's row error. Up/down is known, so no calibration.
     e_side: (cols, rows) from the shaft bottom to the side-cam crosshair; rows > 0 means the tip is above center."""
     ev = e_side[1]
-    speed = float(np.clip(Z_GAIN * abs(ev), Z_MIN_SPEED, Z_MAX_SPEED))
+    speed = min(Z_GAIN * abs(ev), Z_MAX_SPEED)
     down = (ev > 0) != SIDE_FLIPPED
     return [0.0, 0.0, -speed if down else speed, 0.0, 0.0, 0.0]
 
@@ -64,8 +65,8 @@ def _ema(prev, tip):
 
 def _status(phase, e_xy, e_side, v=None):
     xy = f"{np.hypot(*e_xy):.1f}px" if e_xy is not None else "--"
-    sd = f"({e_side[0]:+.0f}, {e_side[1]:+.0f})px" if e_side is not None else "--"
-    s = f"{phase}   XY err {xy}   side err (col,row) {sd}"
+    z = f"{e_side[1]:+.1f}px" if e_side is not None else "--"
+    s = f"{phase}   XY err {xy}   Z err {z}"
     if v is not None:
         s += f"   v=({v[0]*1e3:.1f}, {v[1]*1e3:.1f}, {v[2]*1e3:.1f}) mm/s"
     return s
@@ -197,7 +198,7 @@ def main(arm=1):
             ord('r'): [0,0,1,0,0,0], ord('f'): [0,0,-1,0,0,0]}
 
     cal, mode, p0, z_best, last_phase = None, None, None, None, None    # mode: None, "Z" (step 1) or "XY" (step 3)
-    last_tip, s_xy, s_yz = None, None, None
+    last_tip, s_xy, s_yz, bore_method, z_in = None, None, None, None, 0
     notice, view = "Click this window. Step 1: press z to align Z", None
     prev_gray, lk_pt, lk_n = None, None, 0
 
@@ -219,6 +220,7 @@ def main(arm=1):
                 lk_n    += 1
         if not lk_mode:
             tip, circles, _ = detect_bottom(frame, last_tip)
+            bore_method = cva.last_bore_method
             last_tip = tip or last_tip
             lk_pt    = np.float32(tip) if tip else None
             lk_n     = 0
@@ -236,8 +238,8 @@ def main(arm=1):
                 mode, notice = None, "Z align stopped"
             else:
                 set_zoom()
-                mode, p0, z_best = "Z", np.array(recv.getActualTCPPose()[:3]), None
-                notice = "Step 1: moving Z until the shaft bottom is on the side cam's center row..."
+                mode, p0, z_best, z_in = "Z", np.array(recv.getActualTCPPose()[:3]), None, 0
+                notice = "Step 1: moving Z until the needle bottom is on the side cam's center line..."
             print(notice)
         if key == 32:
             if mode == "XY":
@@ -281,11 +283,15 @@ def main(arm=1):
             else:
                 ev = abs(e_side[1])
                 z_best = ev if z_best is None else min(z_best, ev)
-                if ev < Z_DEAD_BAND:
+                z_in = z_in + 1 if ev < Z_DEAD_BAND else 0
+                if z_in >= Z_SETTLE:              # held on the line with the arm stopped, not just passing through
                     mode, phase = None, "Z ALIGNED"
-                    notice = "Z aligned. Step 2: press c to calibrate XY (or SPACE if already calibrated)"
+                    notice = (f"Z aligned ({e_side[1]:+.1f}px). Step 2: press c to calibrate XY "
+                              f"(or SPACE if already calibrated)")
                     print(notice)
                     print("  TCP pose:", [round(float(p), 5) for p in recv.getActualTCPPose()])
+                elif z_in:
+                    phase = "Z settling"          # inside the band: hold still and check it stays there
                 elif ev > z_best + 30:            # getting further away: the side cam's up/down is the other way
                     mode, phase = None, "Z STOPPED"
                     notice = "Z moved the wrong way - set SIDE_FLIPPED = True in servo_to_center.py"
@@ -301,10 +307,11 @@ def main(arm=1):
                 phase, v = "XY", xy_velocity(e_xy, cal)
 
         stip = (int(s_xy[0]), int(s_xy[1])) if s_xy is not None else None
-        syz  = (int(s_yz[0]), int(s_yz[1])) if s_yz is not None else None
+        syz  = (float(s_yz[0]), float(s_yz[1])) if s_yz is not None else None
         err  = float(np.hypot(*e_xy)) if e_xy is not None else float("inf")
-        panel_xy = draw_overlay(frame, stip, CX, CY, err, v[0], v[1], mode is not None, circles, lk_mode)
-        panel_yz = draw_side_overlay(side, syz, side_lines)
+        panel_xy = draw_overlay(frame, stip, CX, CY, err, v[0], v[1], mode is not None, circles, lk_mode,
+                                method=bore_method if tip else None)
+        panel_yz = draw_side_overlay(side, syz, side_lines, z_band=Z_DEAD_BAND)
         status = _status(phase, e_xy, e_side, v)
         view = (panel_xy, panel_yz, status)
         cv2.imshow("servo", _composite(*view, notice))
@@ -393,13 +400,13 @@ def test_video(xy_path, yz_path=None):
         CX, CY = W // 2, H // 2
         err = ((CX - tip[0])**2 + (CY - tip[1])**2)**0.5 if tip else float("inf")
         panel_xy = draw_overlay(frame_xy, tip, CX, CY, err, 0, 0, False,
-                                circles, lk_mode, bore_circle, det_mode)
+                                circles, lk_mode, bore_circle, det_mode, cva.last_bore_method if tip else None)
 
         # ── YZ side detection ────────────────────────────────────────────────
         tip_yz = None
         if cap_yz:
             tip_yz, side_lines = detect_side(frame_yz)
-            panel_yz = draw_side_overlay(frame_yz, tip_yz, side_lines, det_mode)
+            panel_yz = draw_side_overlay(frame_yz, tip_yz, side_lines, det_mode, z_band=Z_DEAD_BAND)
         else:
             panel_yz = None
 

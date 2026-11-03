@@ -26,6 +26,16 @@ LK_FB_THRESH       = 8.0   # px — max forward-backward error before re-acquire
 LK_REACQUIRE_EVERY = 0
 
 SIDE_LO, SIDE_HI, SIDE_GAP = 50, 150, 40        # Canny / HoughLinesP (side cam)
+SIDE_MIN_CONTRAST = 8   # gray levels — needle vs background needed to refine the bottom edge
+
+# Hough circle bore fallback (same params as the notebook comparison: 400px crop scaled to 224px).
+# xy_cam_3x labels: 1.8px median with the crop off-center by up to 60px (dark-blob 1.0px); found the bore on all of
+# 182236, where the dark-blob finds nothing.
+HOUGH_CROP, HOUGH_SIZE = 400, 224
+HOUGH_PARAM1, HOUGH_PARAM2, HOUGH_MIN_DIST = 60, 20, 30
+HOUGH_MIN_R, HOUGH_MAX_R = 8, 60       # px in the 224px image
+
+last_bore_method = None   # which detect_bottom stage produced the last result: blob / hough / dino / min
 # ─────────────────────────────────────────────────────────────────────────────
 
 _clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
@@ -168,9 +178,53 @@ def track_bore_lk(prev_gray, curr_gray, pt):
     return p1[0, 0]   # shape (2,) float32
 
 
+def _hough_bore(frame, center=None):
+    """Hough circle on a HOUGH_CROP crop around `center` (the circle nearest it), or on the whole frame at the same
+    scale (the circle with the darkest inside) when there's no previous position. Returns (x, y, r) or None."""
+    H, W = frame.shape[:2]
+    s = HOUGH_SIZE / HOUGH_CROP
+    crop = center is not None and W >= HOUGH_CROP and H >= HOUGH_CROP
+    if crop:
+        x1 = int(min(max(0, center[0] - HOUGH_CROP // 2), W - HOUGH_CROP))
+        y1 = int(min(max(0, center[1] - HOUGH_CROP // 2), H - HOUGH_CROP))
+        img = frame[y1:y1 + HOUGH_CROP, x1:x1 + HOUGH_CROP]
+    else:
+        x1 = y1 = 0
+        img = frame
+    small = cv2.resize(img, (round(img.shape[1] * s), round(img.shape[0] * s)))
+    g = cv2.GaussianBlur(cv2.cvtColor(small, cv2.COLOR_BGR2GRAY), (5, 5), 1.5)
+    c = cv2.HoughCircles(g, cv2.HOUGH_GRADIENT, dp=1, minDist=HOUGH_MIN_DIST, param1=HOUGH_PARAM1,
+                         param2=HOUGH_PARAM2, minRadius=HOUGH_MIN_R, maxRadius=HOUGH_MAX_R)
+    if c is None:
+        return None
+    c = c.reshape(-1, 3)   # OpenCV 4 returns (1,N,3), OpenCV 5 (N,3)
+    if crop:
+        tx, ty = (center[0] - x1) * s, (center[1] - y1) * s
+        best = min(c, key=lambda k: (k[0] - tx) ** 2 + (k[1] - ty) ** 2)
+    else:
+        def _inside(k):
+            m = np.zeros_like(g)
+            cv2.circle(m, (int(k[0]), int(k[1])), max(1, int(k[2] * 0.6)), 255, -1)
+            return cv2.mean(g, m)[0]
+        best = min(c, key=_inside)
+    return x1 + float(best[0]) / s, y1 + float(best[1]) / s, float(best[2]) / s
+
+
+def _hough_result(frame, last_tip, circles):
+    global last_bore_method
+    h = _hough_bore(frame, last_tip)
+    if h is None:
+        return None
+    last_bore_method = "hough"
+    return (int(round(h[0])), int(round(h[1]))), circles, None
+
+
 def detect_bottom(frame, last_tip=None, max_jump=200):
     """Stage 1: cap = saturated circular blob. Stage 2: bore = dark circular blob.
-    Fallbacks: DINOv2 head, then V+S minimum inside the cap."""
+    Fallbacks: Hough circle (cropped around the last bore), DINOv2 head, then V+S minimum inside the cap.
+    Sets last_bore_method to the stage that answered."""
+    global last_bore_method
+    last_bore_method = None
     H, W = frame.shape[:2]
 
     # ── Stage 1: locate luer cap via saturation + circularity ────────────────
@@ -186,7 +240,7 @@ def detect_bottom(frame, last_tip=None, max_jump=200):
     contours, _ = cv2.findContours(sat_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cs = [c for c in contours if cv2.contourArea(c) >= CAP_AREA_MIN]
     if not cs:
-        return None, [], None
+        return _hough_result(frame, last_tip, []) or (None, [], None)
 
     def _fill_ratio(c):
         area = cv2.contourArea(c)
@@ -228,12 +282,19 @@ def detect_bottom(frame, last_tip=None, max_jump=200):
         M = cv2.moments(best)
         bx, by = int(round(M["m10"] / M["m00"])), int(round(M["m01"] / M["m00"]))
         (ecx, ecy), er = cv2.minEnclosingCircle(best)
+        last_bore_method = "blob"
         return (bx, by), [(cap_cx, cap_cy, cap_r)], (int(ecx), int(ecy), int(er))
+
+    # Fallback: Hough circle, cropped around the last known bore (whole frame on a cold start)
+    hough = _hough_result(frame, last_tip, [(cap_cx, cap_cy, cap_r)])
+    if hough is not None:
+        return hough
 
     # Fallback: DINOv2 head, cropped around the last known bore (else cap center)
     ccx, ccy = last_tip if last_tip is not None else (cap_cx, cap_cy)
     dino_tip = _dino_detect_bore(frame, ccx, ccy)
     if dino_tip is not None:
+        last_bore_method = "dino"
         return dino_tip, [(cap_cx, cap_cy, cap_r)], None
 
     # Last resort: V+S minimum within filled cap contour (no model available)
@@ -249,15 +310,67 @@ def detect_bottom(frame, last_tip=None, max_jump=200):
     score_map = cv2.GaussianBlur(vs, (7, 7), 2)
     score_map[inner_mask == 0] = 512.0
     min_idx = np.unravel_index(score_map.argmin(), score_map.shape)
+    last_bore_method = "min"
     return (int(min_idx[1]), int(min_idx[0])), [(cap_cx, cap_cy, cap_r)], None
 
 
+def _needle_bottom(gray, vert, tip, win=40):
+    """Sub-pixel bottom end of the needle, or None to keep the Hough endpoint.
+    The segments only give the needle's direction (often only one wall is found). Its center line and width come from
+    a cross-section just above the tip; the end is where the needle's difference from the background beside it drops
+    to half, searched from above the endpoint to 2*win below it (endpoints often stop short). 10.19.26 side videos:
+    90th pct frame-to-frame jitter 0.1-0.5px in focus vs 1-6px for the raw endpoint, which sat up to 60px too high."""
+    pts = np.float32([(x, y) for x1, y1, x2, y2 in vert for x, y in ((x1, y1), (x2, y2))])
+    vx, vy, x0, y0 = cv2.fitLine(pts, cv2.DIST_HUBER, 0, 0.01, 0.01).ravel()
+    if vy < 0:
+        vx, vy = -vx, -vy                                # axis points down the needle
+    nx, ny = vy, -vx
+    t_tip = (tip[0] - x0) * vx + (tip[1] - y0) * vy
+
+    def sample(ts, offs):
+        X = (x0 + ts[:, None] * vx + offs[None, :] * nx).astype(np.float32)
+        Y = (y0 + ts[:, None] * vy + offs[None, :] * ny).astype(np.float32)
+        return cv2.remap(gray, X, Y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
+    # Cross-section above the tip -> needle center line and half width
+    offs = np.arange(-30, 30.5, 1.0)
+    P = sample(np.arange(t_tip - 40, t_tip - 8, 2.0), offs)
+    dev = np.abs(P - np.median(np.concatenate([P[:, :6], P[:, -6:]], axis=1), axis=1, keepdims=True)).mean(axis=0)
+    floor, peak = np.median(np.r_[dev[:6], dev[-6:]]), dev.max()
+    if peak - floor < SIDE_MIN_CONTRAST:
+        return None
+    on = dev > floor + 0.5 * (peak - floor)
+    l = r = int(dev.argmax())
+    while l > 0 and on[l - 1]: l -= 1
+    while r < len(on) - 1 and on[r + 1]: r += 1
+    off, half_w = (offs[l] + offs[r]) / 2, (offs[r] - offs[l]) / 2 + 0.5
+    if not 2 <= half_w <= 22:
+        return None
+    x0, y0 = x0 + off * nx, y0 + off * ny
+
+    # Along the axis: needle core vs the background beside it (abs, so a bright reflection stripe counts as needle)
+    ts = np.arange(t_tip - win, t_tip + 2 * win + 0.25, 0.5)
+    core = sample(ts, np.linspace(-0.6 * half_w, 0.6 * half_w, 7))
+    side = sample(ts, np.r_[np.linspace(-half_w - 12, -half_w - 5, 4), np.linspace(half_w + 5, half_w + 12, 4)])
+    con = np.abs(core - np.median(side, axis=1, keepdims=True)).mean(axis=1)
+    inside, outside = np.median(con[ts < t_tip - 12]), np.percentile(con, 10)
+    if inside - outside < SIDE_MIN_CONTRAST:
+        return None
+    a = con - (inside + outside) / 2                     # > 0 on the needle, < 0 past its end
+    stay = 24                                            # 12px of background must follow the end
+    for i in range(int(np.searchsorted(ts, t_tip - 12)), len(a) - stay):
+        if a[i] > 0 and (a[i + 1:i + 1 + stay] <= 0).all():
+            t_b = ts[i] + 0.5 * a[i] / (a[i] - a[i + 1])
+            return float(x0 + t_b * vx), float(y0 + t_b * vy)
+    return None
+
+
 def detect_side(frame, tip_at_bottom=True):
-    """Side-view needle tip detection (from needle_detection.ipynb).
+    """Side-view needle tip detection (from needle_detection.ipynb). Returns ((x, y) float or None, segments).
 
     Primary: Hough lines on Canny edges — finds near-vertical line segments
-    (needle shaft), returns the bottommost (or topmost) endpoint as the tip.
-    Better than contour thresholding for thin, low-contrast needles.
+    (needle shaft); the bottommost (or topmost) endpoint is the rough tip, then
+    the bottom is refined to sub-pixel along the needle (_needle_bottom).
 
     Fallback: contour thresholding — brightest-against-dark blob with high
     aspect ratio; used if Hough lines find nothing.
@@ -277,7 +390,10 @@ def detect_side(frame, tip_at_bottom=True):
                    for x, y in [(x1, y1), (x2, y2)]]
             tip = (max(pts, key=lambda p: p[1]) if tip_at_bottom
                    else min(pts, key=lambda p: p[1]))
-            return tip, vert
+            if tip_at_bottom:
+                g = cv2.GaussianBlur(gray, (3, 3), 0).astype(np.float32)
+                tip = _needle_bottom(g, vert, tip) or tip
+            return (float(tip[0]), float(tip[1])), vert
 
     # ── Contour fallback ───────────────────────────────────────────────────
     _, mask = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
@@ -292,12 +408,12 @@ def detect_side(frame, tip_at_bottom=True):
         return None, []
     needle = max(candidates, key=cv2.contourArea)
     idx    = needle[:, :, 1].argmax() if tip_at_bottom else needle[:, :, 1].argmin()
-    return tuple(needle[idx][0]), []
+    return (float(needle[idx][0][0]), float(needle[idx][0][1])), []
 
 
 def draw_overlay(frame, tip, cx, cy, err, vx, vy, armed, circles=None,
-                 lk_mode=False, bore_circle=None, mode=0):
-    """mode 0 = center dot, mode 1 = bore circle (radius view)."""
+                 lk_mode=False, bore_circle=None, mode=0, method=None):
+    """mode 0 = center dot, mode 1 = bore circle (radius view). method = detect_bottom stage, shown next to err."""
     out = frame.copy()
     h, w = out.shape[:2]
     cv2.line(out, (0, cy), (w, cy), (0, 255, 0), 1)
@@ -324,6 +440,8 @@ def draw_overlay(frame, tip, cx, cy, err, vx, vy, armed, circles=None,
         det_str = f"err {err:.1f}px  r={bore_circle[2]}px"
     else:
         det_str = f"err {err:.1f}px" if tip else "NO DETECTION"
+    if tip and method:
+        det_str += f"  ({method})"
 
     texts = [
         (det_str,                                          (0, 200, 255)),
@@ -344,27 +462,32 @@ def draw_overlay(frame, tip, cx, cy, err, vx, vy, armed, circles=None,
     return out
 
 
-def draw_side_overlay(frame, tip, side_lines=None, mode=0):
-    """YZ side-view overlay.
-    mode 0 = tip dot only
-    mode 1 = edge lines (all detected Hough segments drawn)
+def draw_side_overlay(frame, tip, side_lines=None, mode=0, z_band=None):
+    """YZ side-view overlay. Only Z is servoed from this view, so the target is the horizontal center line (green);
+    the magenta line runs through the needle's bottom and turns green once it is within z_band px of the target.
+    mode 0 = bottom line only
+    mode 1 = also the detected Hough segments
     """
     out = frame.copy()
     h, w = out.shape[:2]
-    cx, cy = w // 2, h // 2
-    cv2.line(out, (0, cy), (w, cy), (0, 255, 0), 1)
-    cv2.line(out, (cx, 0), (cx, h), (0, 255, 0), 1)
+    cy = h // 2
+    cv2.line(out, (0, cy), (w, cy), (0, 255, 0), 2)
 
     if mode == 1 and side_lines:
         for x1, y1, x2, y2 in side_lines:
             cv2.line(out, (x1, y1), (x2, y2), (0, 220, 255), 2)
 
     if tip:
-        cv2.circle(out, tip, 8, (0, 255, 255), -1)
-        cv2.line(out, tip, (cx, cy), (255, 0, 255), 1)
-        err = ((cx - tip[0])**2 + (cy - tip[1])**2)**0.5
-        cv2.putText(out, f"YZ err {err:.0f}px", (10, 34),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 200, 255), 2)
+        ev  = cy - tip[1]                                 # rows from the bottom to the target (+ = needle too high)
+        on  = z_band is not None and abs(ev) < z_band
+        col = (0, 255, 0) if on else (255, 0, 255)
+        tx, y16 = int(round(tip[0])), int(round(tip[1] * 16))
+        cv2.line(out, (0, y16), (w * 16, y16), col, 1, cv2.LINE_AA, shift=4)   # sub-pixel row
+        if abs(ev) > 6:
+            cv2.arrowedLine(out, (tx, int(round(tip[1]))), (tx, cy), col, 2, tipLength=min(0.3, 12 / abs(ev)))
+        cv2.circle(out, (tx, int(round(tip[1]))), 5, col, -1)
+        cv2.putText(out, f"Z err {ev:+.1f}px" + ("  ON LINE" if on else ""), (10, 34),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0) if on else (0, 200, 255), 2)
     else:
         cv2.putText(out, "YZ NO DETECTION", (10, 34),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 80, 255), 2)
