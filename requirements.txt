@@ -1,0 +1,15 @@
+# Core analysis (any machine)
+numpy>=1.24
+opencv-python>=4.8
+rich>=13.0          # colored CLI tables; optional but recommended
+
+# servo_to_center.py (robot PC)
+ur_rtde             # rtde_control + rtde_receive
+
+# Optional: DINOv2 fallback in cv_algorithms.py and the training notebook
+# torch torchvision transformers pillow
+
+# GUI (Raspberry Pi only — install separately via apt/pip on Pi)
+# picamera2
+# PyQt5
+# libcamera (system package)

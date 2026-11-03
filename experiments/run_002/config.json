@@ -1,0 +1,16 @@
+{
+  "name": "run_002_198labels",
+  "note": "198 labeled cam1_z3.75x, frozen dinov2-s backbone",
+  "model": "facebook/dinov2-small",
+  "datasets": [
+    "cam1_z3.75x"
+  ],
+  "epochs": 40,
+  "lr": 0.0003,
+  "batch_size": 8,
+  "val_split": 0.15,
+  "n_train": 169,
+  "n_val": 29,
+  "run_id": "run_002",
+  "timestamp": "2026-10-06T17:40:21"
+}

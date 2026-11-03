@@ -1,0 +1,17 @@
+{
+  "name": "run_005_xy_cam_3x",
+  "note": "356 labels, xy_cam 3x zoom dataset only, 400px crop",
+  "model": "facebook/dinov2-small",
+  "datasets": [
+    "xy_cam_3x"
+  ],
+  "crop_size": 400,
+  "epochs": 60,
+  "lr": 0.0001,
+  "batch_size": 8,
+  "val_split": 0.15,
+  "n_train": 303,
+  "n_val": 53,
+  "run_id": "run_005",
+  "timestamp": "2026-10-09T13:17:17"
+}

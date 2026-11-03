@@ -1,0 +1,17 @@
+{
+  "name": "run_004_fixed_val",
+  "note": "fix: val jitter=0, hflip in dataset, val_px in crop px (was 224px)",
+  "model": "facebook/dinov2-small",
+  "datasets": [
+    "cam1_z3.75x"
+  ],
+  "crop_size": 400,
+  "epochs": 60,
+  "lr": 0.0001,
+  "batch_size": 8,
+  "val_split": 0.15,
+  "n_train": 169,
+  "n_val": 29,
+  "run_id": "run_004",
+  "timestamp": "2026-10-06T18:10:02"
+}

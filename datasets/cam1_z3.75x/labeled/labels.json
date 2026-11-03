@@ -1,0 +1,1190 @@
+{
+  "frame_00000.jpg": {
+    "bore_x": 690,
+    "bore_y": 299,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4152777777777778
+  },
+  "frame_00003.jpg": {
+    "bore_x": 689,
+    "bore_y": 298,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.41388888888888886
+  },
+  "frame_00006.jpg": {
+    "bore_x": 689,
+    "bore_y": 296,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.4111111111111111
+  },
+  "frame_00009.jpg": {
+    "bore_x": 690,
+    "bore_y": 296,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4111111111111111
+  },
+  "frame_00012.jpg": {
+    "bore_x": 690,
+    "bore_y": 297,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4125
+  },
+  "frame_00015.jpg": {
+    "bore_x": 689,
+    "bore_y": 297,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.4125
+  },
+  "frame_00018.jpg": {
+    "bore_x": 689,
+    "bore_y": 296,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.4111111111111111
+  },
+  "frame_00021.jpg": {
+    "bore_x": 689,
+    "bore_y": 298,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.41388888888888886
+  },
+  "frame_00024.jpg": {
+    "bore_x": 690,
+    "bore_y": 299,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4152777777777778
+  },
+  "frame_00027.jpg": {
+    "bore_x": 688,
+    "bore_y": 297,
+    "bore_x_norm": 0.5375,
+    "bore_y_norm": 0.4125
+  },
+  "frame_00030.jpg": {
+    "bore_x": 688,
+    "bore_y": 295,
+    "bore_x_norm": 0.5375,
+    "bore_y_norm": 0.4097222222222222
+  },
+  "frame_00033.jpg": {
+    "bore_x": 690,
+    "bore_y": 295,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4097222222222222
+  },
+  "frame_00036.jpg": {
+    "bore_x": 690,
+    "bore_y": 297,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4125
+  },
+  "frame_00039.jpg": {
+    "bore_x": 689,
+    "bore_y": 298,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.41388888888888886
+  },
+  "frame_00042.jpg": {
+    "bore_x": 688,
+    "bore_y": 297,
+    "bore_x_norm": 0.5375,
+    "bore_y_norm": 0.4125
+  },
+  "frame_00045.jpg": {
+    "bore_x": 688,
+    "bore_y": 297,
+    "bore_x_norm": 0.5375,
+    "bore_y_norm": 0.4125
+  },
+  "frame_00048.jpg": {
+    "bore_x": 690,
+    "bore_y": 295,
+    "bore_x_norm": 0.5390625,
+    "bore_y_norm": 0.4097222222222222
+  },
+  "frame_00051.jpg": {
+    "bore_x": 689,
+    "bore_y": 295,
+    "bore_x_norm": 0.53828125,
+    "bore_y_norm": 0.4097222222222222
+  },
+  "frame_00054.jpg": {
+    "bore_x": 688,
+    "bore_y": 296,
+    "bore_x_norm": 0.5375,
+    "bore_y_norm": 0.4111111111111111
+  },
+  "frame_00057.jpg": {
+    "bore_x": 693,
+    "bore_y": 257,
+    "bore_x_norm": 0.54140625,
+    "bore_y_norm": 0.35694444444444445
+  },
+  "frame_00060.jpg": {
+    "bore_x": 693,
+    "bore_y": 256,
+    "bore_x_norm": 0.54140625,
+    "bore_y_norm": 0.35555555555555557
+  },
+  "frame_00063.jpg": {
+    "bore_x": 695,
+    "bore_y": 256,
+    "bore_x_norm": 0.54296875,
+    "bore_y_norm": 0.35555555555555557
+  },
+  "frame_00066.jpg": {
+    "bore_x": 704,
+    "bore_y": 215,
+    "bore_x_norm": 0.55,
+    "bore_y_norm": 0.2986111111111111
+  },
+  "frame_00069.jpg": {
+    "bore_x": 704,
+    "bore_y": 213,
+    "bore_x_norm": 0.55,
+    "bore_y_norm": 0.29583333333333334
+  },
+  "frame_00072.jpg": {
+    "bore_x": 704,
+    "bore_y": 214,
+    "bore_x_norm": 0.55,
+    "bore_y_norm": 0.2972222222222222
+  },
+  "frame_00075.jpg": {
+    "bore_x": 705,
+    "bore_y": 216,
+    "bore_x_norm": 0.55078125,
+    "bore_y_norm": 0.3
+  },
+  "frame_00078.jpg": {
+    "bore_x": 703,
+    "bore_y": 176,
+    "bore_x_norm": 0.54921875,
+    "bore_y_norm": 0.24444444444444444
+  },
+  "frame_00081.jpg": {
+    "bore_x": 708,
+    "bore_y": 176,
+    "bore_x_norm": 0.553125,
+    "bore_y_norm": 0.24444444444444444
+  },
+  "frame_00084.jpg": {
+    "bore_x": 709,
+    "bore_y": 176,
+    "bore_x_norm": 0.55390625,
+    "bore_y_norm": 0.24444444444444444
+  },
+  "frame_00087.jpg": {
+    "bore_x": 710,
+    "bore_y": 138,
+    "bore_x_norm": 0.5546875,
+    "bore_y_norm": 0.19166666666666668
+  },
+  "frame_00090.jpg": {
+    "bore_x": 712,
+    "bore_y": 135,
+    "bore_x_norm": 0.55625,
+    "bore_y_norm": 0.1875
+  },
+  "frame_00093.jpg": {
+    "bore_x": 713,
+    "bore_y": 135,
+    "bore_x_norm": 0.55703125,
+    "bore_y_norm": 0.1875
+  },
+  "frame_00096.jpg": {
+    "bore_x": 715,
+    "bore_y": 137,
+    "bore_x_norm": 0.55859375,
+    "bore_y_norm": 0.19027777777777777
+  },
+  "frame_00099.jpg": {
+    "bore_x": 715,
+    "bore_y": 137,
+    "bore_x_norm": 0.55859375,
+    "bore_y_norm": 0.19027777777777777
+  },
+  "frame_00102.jpg": {
+    "bore_x": 715,
+    "bore_y": 135,
+    "bore_x_norm": 0.55859375,
+    "bore_y_norm": 0.1875
+  },
+  "frame_00105.jpg": {
+    "bore_x": 714,
+    "bore_y": 136,
+    "bore_x_norm": 0.5578125,
+    "bore_y_norm": 0.18888888888888888
+  },
+  "frame_00108.jpg": {
+    "bore_x": 710,
+    "bore_y": 126,
+    "bore_x_norm": 0.5546875,
+    "bore_y_norm": 0.175
+  },
+  "frame_00111.jpg": {
+    "bore_x": 719,
+    "bore_y": 98,
+    "bore_x_norm": 0.56171875,
+    "bore_y_norm": 0.1361111111111111
+  },
+  "frame_00114.jpg": {
+    "bore_x": 717,
+    "bore_y": 96,
+    "bore_x_norm": 0.56015625,
+    "bore_y_norm": 0.13333333333333333
+  },
+  "frame_00117.jpg": {
+    "bore_x": 716,
+    "bore_y": 95,
+    "bore_x_norm": 0.559375,
+    "bore_y_norm": 0.13194444444444445
+  },
+  "frame_00120.jpg": {
+    "bore_x": 717,
+    "bore_y": 95,
+    "bore_x_norm": 0.56015625,
+    "bore_y_norm": 0.13194444444444445
+  },
+  "frame_00123.jpg": {
+    "bore_x": 719,
+    "bore_y": 97,
+    "bore_x_norm": 0.56171875,
+    "bore_y_norm": 0.13472222222222222
+  },
+  "frame_00126.jpg": {
+    "bore_x": 718,
+    "bore_y": 96,
+    "bore_x_norm": 0.5609375,
+    "bore_y_norm": 0.13333333333333333
+  },
+  "frame_00129.jpg": {
+    "bore_x": 717,
+    "bore_y": 93,
+    "bore_x_norm": 0.56015625,
+    "bore_y_norm": 0.12916666666666668
+  },
+  "frame_00132.jpg": {
+    "bore_x": 718,
+    "bore_y": 95,
+    "bore_x_norm": 0.5609375,
+    "bore_y_norm": 0.13194444444444445
+  },
+  "frame_00135.jpg": {
+    "bore_x": 717,
+    "bore_y": 95,
+    "bore_x_norm": 0.56015625,
+    "bore_y_norm": 0.13194444444444445
+  },
+  "frame_00138.jpg": {
+    "bore_x": 717,
+    "bore_y": 96,
+    "bore_x_norm": 0.56015625,
+    "bore_y_norm": 0.13333333333333333
+  },
+  "frame_00141.jpg": {
+    "bore_x": 682,
+    "bore_y": 85,
+    "bore_x_norm": 0.5328125,
+    "bore_y_norm": 0.11805555555555555
+  },
+  "frame_00144.jpg": {
+    "bore_x": 675,
+    "bore_y": 91,
+    "bore_x_norm": 0.52734375,
+    "bore_y_norm": 0.12638888888888888
+  },
+  "frame_00147.jpg": {
+    "bore_x": 674,
+    "bore_y": 88,
+    "bore_x_norm": 0.5265625,
+    "bore_y_norm": 0.12222222222222222
+  },
+  "frame_00150.jpg": {
+    "bore_x": 638,
+    "bore_y": 79,
+    "bore_x_norm": 0.4984375,
+    "bore_y_norm": 0.10972222222222222
+  },
+  "frame_00153.jpg": {
+    "bore_x": 639,
+    "bore_y": 83,
+    "bore_x_norm": 0.49921875,
+    "bore_y_norm": 0.11527777777777778
+  },
+  "frame_00156.jpg": {
+    "bore_x": 637,
+    "bore_y": 82,
+    "bore_x_norm": 0.49765625,
+    "bore_y_norm": 0.11388888888888889
+  },
+  "frame_00159.jpg": {
+    "bore_x": 638,
+    "bore_y": 83,
+    "bore_x_norm": 0.4984375,
+    "bore_y_norm": 0.11527777777777778
+  },
+  "frame_00162.jpg": {
+    "bore_x": 638,
+    "bore_y": 83,
+    "bore_x_norm": 0.4984375,
+    "bore_y_norm": 0.11527777777777778
+  },
+  "frame_00165.jpg": {
+    "bore_x": 638,
+    "bore_y": 83,
+    "bore_x_norm": 0.4984375,
+    "bore_y_norm": 0.11527777777777778
+  },
+  "frame_00168.jpg": {
+    "bore_x": 638,
+    "bore_y": 83,
+    "bore_x_norm": 0.4984375,
+    "bore_y_norm": 0.11527777777777778
+  },
+  "frame_00171.jpg": {
+    "bore_x": 633,
+    "bore_y": 84,
+    "bore_x_norm": 0.49453125,
+    "bore_y_norm": 0.11666666666666667
+  },
+  "frame_00174.jpg": {
+    "bore_x": 602,
+    "bore_y": 76,
+    "bore_x_norm": 0.4703125,
+    "bore_y_norm": 0.10555555555555556
+  },
+  "frame_00177.jpg": {
+    "bore_x": 598,
+    "bore_y": 75,
+    "bore_x_norm": 0.4671875,
+    "bore_y_norm": 0.10416666666666667
+  },
+  "frame_00180.jpg": {
+    "bore_x": 598,
+    "bore_y": 75,
+    "bore_x_norm": 0.4671875,
+    "bore_y_norm": 0.10416666666666667
+  },
+  "frame_00183.jpg": {
+    "bore_x": 598,
+    "bore_y": 75,
+    "bore_x_norm": 0.4671875,
+    "bore_y_norm": 0.10416666666666667
+  },
+  "frame_00186.jpg": {
+    "bore_x": 598,
+    "bore_y": 75,
+    "bore_x_norm": 0.4671875,
+    "bore_y_norm": 0.10416666666666667
+  },
+  "frame_00189.jpg": {
+    "bore_x": 560,
+    "bore_y": 68,
+    "bore_x_norm": 0.4375,
+    "bore_y_norm": 0.09444444444444444
+  },
+  "frame_00192.jpg": {
+    "bore_x": 560,
+    "bore_y": 74,
+    "bore_x_norm": 0.4375,
+    "bore_y_norm": 0.10277777777777777
+  },
+  "frame_00195.jpg": {
+    "bore_x": 558,
+    "bore_y": 72,
+    "bore_x_norm": 0.4359375,
+    "bore_y_norm": 0.1
+  },
+  "frame_00198.jpg": {
+    "bore_x": 558,
+    "bore_y": 72,
+    "bore_x_norm": 0.4359375,
+    "bore_y_norm": 0.1
+  },
+  "frame_00201.jpg": {
+    "bore_x": 558,
+    "bore_y": 72,
+    "bore_x_norm": 0.4359375,
+    "bore_y_norm": 0.1
+  },
+  "frame_00204.jpg": {
+    "bore_x": 558,
+    "bore_y": 72,
+    "bore_x_norm": 0.4359375,
+    "bore_y_norm": 0.1
+  },
+  "frame_00207.jpg": {
+    "bore_x": 516,
+    "bore_y": 62,
+    "bore_x_norm": 0.403125,
+    "bore_y_norm": 0.08611111111111111
+  },
+  "frame_00210.jpg": {
+    "bore_x": 518,
+    "bore_y": 67,
+    "bore_x_norm": 0.4046875,
+    "bore_y_norm": 0.09305555555555556
+  },
+  "frame_00213.jpg": {
+    "bore_x": 515,
+    "bore_y": 67,
+    "bore_x_norm": 0.40234375,
+    "bore_y_norm": 0.09305555555555556
+  },
+  "frame_00216.jpg": {
+    "bore_x": 515,
+    "bore_y": 67,
+    "bore_x_norm": 0.40234375,
+    "bore_y_norm": 0.09305555555555556
+  },
+  "frame_00219.jpg": {
+    "bore_x": 515,
+    "bore_y": 67,
+    "bore_x_norm": 0.40234375,
+    "bore_y_norm": 0.09305555555555556
+  },
+  "frame_00225.jpg": {
+    "bore_x": 473,
+    "bore_y": 61,
+    "bore_x_norm": 0.36953125,
+    "bore_y_norm": 0.08472222222222223
+  },
+  "frame_00228.jpg": {
+    "bore_x": 470,
+    "bore_y": 61,
+    "bore_x_norm": 0.3671875,
+    "bore_y_norm": 0.08472222222222223
+  },
+  "frame_00231.jpg": {
+    "bore_x": 470,
+    "bore_y": 61,
+    "bore_x_norm": 0.3671875,
+    "bore_y_norm": 0.08472222222222223
+  },
+  "frame_00234.jpg": {
+    "bore_x": 470,
+    "bore_y": 61,
+    "bore_x_norm": 0.3671875,
+    "bore_y_norm": 0.08472222222222223
+  },
+  "frame_00237.jpg": {
+    "bore_x": 470,
+    "bore_y": 61,
+    "bore_x_norm": 0.3671875,
+    "bore_y_norm": 0.08472222222222223
+  },
+  "frame_00240.jpg": {
+    "bore_x": 427,
+    "bore_y": 50,
+    "bore_x_norm": 0.33359375,
+    "bore_y_norm": 0.06944444444444445
+  },
+  "frame_00243.jpg": {
+    "bore_x": 432,
+    "bore_y": 61,
+    "bore_x_norm": 0.3375,
+    "bore_y_norm": 0.08472222222222223
+  },
+  "frame_00246.jpg": {
+    "bore_x": 430,
+    "bore_y": 59,
+    "bore_x_norm": 0.3359375,
+    "bore_y_norm": 0.08194444444444444
+  },
+  "frame_00249.jpg": {
+    "bore_x": 430,
+    "bore_y": 59,
+    "bore_x_norm": 0.3359375,
+    "bore_y_norm": 0.08194444444444444
+  },
+  "frame_00252.jpg": {
+    "bore_x": 430,
+    "bore_y": 59,
+    "bore_x_norm": 0.3359375,
+    "bore_y_norm": 0.08194444444444444
+  },
+  "frame_00255.jpg": {
+    "bore_x": 430,
+    "bore_y": 59,
+    "bore_x_norm": 0.3359375,
+    "bore_y_norm": 0.08194444444444444
+  },
+  "frame_00258.jpg": {
+    "bore_x": 462,
+    "bore_y": 64,
+    "bore_x_norm": 0.3609375,
+    "bore_y_norm": 0.08888888888888889
+  },
+  "frame_00261.jpg": {
+    "bore_x": 469,
+    "bore_y": 62,
+    "bore_x_norm": 0.36640625,
+    "bore_y_norm": 0.08611111111111111
+  },
+  "frame_00264.jpg": {
+    "bore_x": 498,
+    "bore_y": 67,
+    "bore_x_norm": 0.3890625,
+    "bore_y_norm": 0.09305555555555556
+  },
+  "frame_00267.jpg": {
+    "bore_x": 501,
+    "bore_y": 69,
+    "bore_x_norm": 0.39140625,
+    "bore_y_norm": 0.09583333333333334
+  },
+  "frame_00270.jpg": {
+    "bore_x": 504,
+    "bore_y": 69,
+    "bore_x_norm": 0.39375,
+    "bore_y_norm": 0.09583333333333334
+  },
+  "frame_00273.jpg": {
+    "bore_x": 504,
+    "bore_y": 69,
+    "bore_x_norm": 0.39375,
+    "bore_y_norm": 0.09583333333333334
+  },
+  "frame_00276.jpg": {
+    "bore_x": 520,
+    "bore_y": 106,
+    "bore_x_norm": 0.40625,
+    "bore_y_norm": 0.14722222222222223
+  },
+  "frame_00279.jpg": {
+    "bore_x": 503,
+    "bore_y": 106,
+    "bore_x_norm": 0.39296875,
+    "bore_y_norm": 0.14722222222222223
+  },
+  "frame_00282.jpg": {
+    "bore_x": 505,
+    "bore_y": 109,
+    "bore_x_norm": 0.39453125,
+    "bore_y_norm": 0.15138888888888888
+  },
+  "frame_00285.jpg": {
+    "bore_x": 502,
+    "bore_y": 108,
+    "bore_x_norm": 0.3921875,
+    "bore_y_norm": 0.15
+  },
+  "frame_00288.jpg": {
+    "bore_x": 494,
+    "bore_y": 149,
+    "bore_x_norm": 0.3859375,
+    "bore_y_norm": 0.20694444444444443
+  },
+  "frame_00291.jpg": {
+    "bore_x": 494,
+    "bore_y": 149,
+    "bore_x_norm": 0.3859375,
+    "bore_y_norm": 0.20694444444444443
+  },
+  "frame_00294.jpg": {
+    "bore_x": 494,
+    "bore_y": 149,
+    "bore_x_norm": 0.3859375,
+    "bore_y_norm": 0.20694444444444443
+  },
+  "frame_00297.jpg": {
+    "bore_x": 494,
+    "bore_y": 149,
+    "bore_x_norm": 0.3859375,
+    "bore_y_norm": 0.20694444444444443
+  },
+  "frame_00300.jpg": {
+    "bore_x": 490,
+    "bore_y": 190,
+    "bore_x_norm": 0.3828125,
+    "bore_y_norm": 0.2638888888888889
+  },
+  "frame_00303.jpg": {
+    "bore_x": 490,
+    "bore_y": 190,
+    "bore_x_norm": 0.3828125,
+    "bore_y_norm": 0.2638888888888889
+  },
+  "frame_00222.jpg": {
+    "bore_x": 496,
+    "bore_y": 65,
+    "bore_x_norm": 0.3875,
+    "bore_y_norm": 0.09027777777777778
+  },
+  "frame_00306.jpg": {
+    "bore_x": 640,
+    "bore_y": 360,
+    "bore_x_norm": 0.5,
+    "bore_y_norm": 0.5
+  },
+  "frame_00309.jpg": {
+    "bore_x": 482,
+    "bore_y": 232,
+    "bore_x_norm": 0.3765625,
+    "bore_y_norm": 0.32222222222222224
+  },
+  "frame_00312.jpg": {
+    "bore_x": 482,
+    "bore_y": 232,
+    "bore_x_norm": 0.3765625,
+    "bore_y_norm": 0.32222222222222224
+  },
+  "frame_00315.jpg": {
+    "bore_x": 482,
+    "bore_y": 232,
+    "bore_x_norm": 0.3765625,
+    "bore_y_norm": 0.32222222222222224
+  },
+  "frame_00318.jpg": {
+    "bore_x": 479,
+    "bore_y": 253,
+    "bore_x_norm": 0.37421875,
+    "bore_y_norm": 0.35138888888888886
+  },
+  "frame_00321.jpg": {
+    "bore_x": 472,
+    "bore_y": 272,
+    "bore_x_norm": 0.36875,
+    "bore_y_norm": 0.37777777777777777
+  },
+  "frame_00324.jpg": {
+    "bore_x": 472,
+    "bore_y": 276,
+    "bore_x_norm": 0.36875,
+    "bore_y_norm": 0.38333333333333336
+  },
+  "frame_00327.jpg": {
+    "bore_x": 473,
+    "bore_y": 269,
+    "bore_x_norm": 0.36953125,
+    "bore_y_norm": 0.3736111111111111
+  },
+  "frame_00330.jpg": {
+    "bore_x": 465,
+    "bore_y": 310,
+    "bore_x_norm": 0.36328125,
+    "bore_y_norm": 0.4305555555555556
+  },
+  "frame_00333.jpg": {
+    "bore_x": 467,
+    "bore_y": 312,
+    "bore_x_norm": 0.36484375,
+    "bore_y_norm": 0.43333333333333335
+  },
+  "frame_00336.jpg": {
+    "bore_x": 466,
+    "bore_y": 313,
+    "bore_x_norm": 0.3640625,
+    "bore_y_norm": 0.43472222222222223
+  },
+  "frame_00339.jpg": {
+    "bore_x": 469,
+    "bore_y": 338,
+    "bore_x_norm": 0.36640625,
+    "bore_y_norm": 0.46944444444444444
+  },
+  "frame_00342.jpg": {
+    "bore_x": 466,
+    "bore_y": 352,
+    "bore_x_norm": 0.3640625,
+    "bore_y_norm": 0.4888888888888889
+  },
+  "frame_00345.jpg": {
+    "bore_x": 463,
+    "bore_y": 352,
+    "bore_x_norm": 0.36171875,
+    "bore_y_norm": 0.4888888888888889
+  },
+  "frame_00348.jpg": {
+    "bore_x": 464,
+    "bore_y": 390,
+    "bore_x_norm": 0.3625,
+    "bore_y_norm": 0.5416666666666666
+  },
+  "frame_00351.jpg": {
+    "bore_x": 460,
+    "bore_y": 388,
+    "bore_x_norm": 0.359375,
+    "bore_y_norm": 0.5388888888888889
+  },
+  "frame_00354.jpg": {
+    "bore_x": 460,
+    "bore_y": 389,
+    "bore_x_norm": 0.359375,
+    "bore_y_norm": 0.5402777777777777
+  },
+  "frame_00357.jpg": {
+    "bore_x": 458,
+    "bore_y": 408,
+    "bore_x_norm": 0.3578125,
+    "bore_y_norm": 0.5666666666666667
+  },
+  "frame_00360.jpg": {
+    "bore_x": 451,
+    "bore_y": 429,
+    "bore_x_norm": 0.35234375,
+    "bore_y_norm": 0.5958333333333333
+  },
+  "frame_00363.jpg": {
+    "bore_x": 449,
+    "bore_y": 432,
+    "bore_x_norm": 0.35078125,
+    "bore_y_norm": 0.6
+  },
+  "frame_00366.jpg": {
+    "bore_x": 451,
+    "bore_y": 430,
+    "bore_x_norm": 0.35234375,
+    "bore_y_norm": 0.5972222222222222
+  },
+  "frame_00369.jpg": {
+    "bore_x": 443,
+    "bore_y": 469,
+    "bore_x_norm": 0.34609375,
+    "bore_y_norm": 0.6513888888888889
+  },
+  "frame_00372.jpg": {
+    "bore_x": 442,
+    "bore_y": 469,
+    "bore_x_norm": 0.3453125,
+    "bore_y_norm": 0.6513888888888889
+  },
+  "frame_00375.jpg": {
+    "bore_x": 442,
+    "bore_y": 469,
+    "bore_x_norm": 0.3453125,
+    "bore_y_norm": 0.6513888888888889
+  },
+  "frame_00378.jpg": {
+    "bore_x": 441,
+    "bore_y": 471,
+    "bore_x_norm": 0.34453125,
+    "bore_y_norm": 0.6541666666666667
+  },
+  "frame_00381.jpg": {
+    "bore_x": 440,
+    "bore_y": 505,
+    "bore_x_norm": 0.34375,
+    "bore_y_norm": 0.7013888888888888
+  },
+  "frame_00384.jpg": {
+    "bore_x": 438,
+    "bore_y": 509,
+    "bore_x_norm": 0.3421875,
+    "bore_y_norm": 0.7069444444444445
+  },
+  "frame_00387.jpg": {
+    "bore_x": 438,
+    "bore_y": 508,
+    "bore_x_norm": 0.3421875,
+    "bore_y_norm": 0.7055555555555556
+  },
+  "frame_00390.jpg": {
+    "bore_x": 435,
+    "bore_y": 547,
+    "bore_x_norm": 0.33984375,
+    "bore_y_norm": 0.7597222222222222
+  },
+  "frame_00393.jpg": {
+    "bore_x": 436,
+    "bore_y": 549,
+    "bore_x_norm": 0.340625,
+    "bore_y_norm": 0.7625
+  },
+  "frame_00396.jpg": {
+    "bore_x": 435,
+    "bore_y": 550,
+    "bore_x_norm": 0.33984375,
+    "bore_y_norm": 0.7638888888888888
+  },
+  "frame_00399.jpg": {
+    "bore_x": 432,
+    "bore_y": 589,
+    "bore_x_norm": 0.3375,
+    "bore_y_norm": 0.8180555555555555
+  },
+  "frame_00402.jpg": {
+    "bore_x": 430,
+    "bore_y": 588,
+    "bore_x_norm": 0.3359375,
+    "bore_y_norm": 0.8166666666666667
+  },
+  "frame_00405.jpg": {
+    "bore_x": 427,
+    "bore_y": 594,
+    "bore_x_norm": 0.33359375,
+    "bore_y_norm": 0.825
+  },
+  "frame_00408.jpg": {
+    "bore_x": 422,
+    "bore_y": 630,
+    "bore_x_norm": 0.3296875,
+    "bore_y_norm": 0.875
+  },
+  "frame_00411.jpg": {
+    "bore_x": 422,
+    "bore_y": 630,
+    "bore_x_norm": 0.3296875,
+    "bore_y_norm": 0.875
+  },
+  "frame_00414.jpg": {
+    "bore_x": 640,
+    "bore_y": 360,
+    "bore_x_norm": 0.5,
+    "bore_y_norm": 0.5
+  },
+  "frame_00417.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00420.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00423.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00426.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00429.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00432.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00435.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00438.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00441.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00444.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00447.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00450.jpg": {
+    "bore_x": 419,
+    "bore_y": 632,
+    "bore_x_norm": 0.32734375,
+    "bore_y_norm": 0.8777777777777778
+  },
+  "frame_00453.jpg": {
+    "bore_x": 463,
+    "bore_y": 631,
+    "bore_x_norm": 0.36171875,
+    "bore_y_norm": 0.8763888888888889
+  },
+  "frame_00456.jpg": {
+    "bore_x": 464,
+    "bore_y": 635,
+    "bore_x_norm": 0.3625,
+    "bore_y_norm": 0.8819444444444444
+  },
+  "frame_00459.jpg": {
+    "bore_x": 464,
+    "bore_y": 635,
+    "bore_x_norm": 0.3625,
+    "bore_y_norm": 0.8819444444444444
+  },
+  "frame_00462.jpg": {
+    "bore_x": 499,
+    "bore_y": 645,
+    "bore_x_norm": 0.38984375,
+    "bore_y_norm": 0.8958333333333334
+  },
+  "frame_00465.jpg": {
+    "bore_x": 501,
+    "bore_y": 640,
+    "bore_x_norm": 0.39140625,
+    "bore_y_norm": 0.8888888888888888
+  },
+  "frame_00468.jpg": {
+    "bore_x": 501,
+    "bore_y": 638,
+    "bore_x_norm": 0.39140625,
+    "bore_y_norm": 0.8861111111111111
+  },
+  "frame_00471.jpg": {
+    "bore_x": 530,
+    "bore_y": 646,
+    "bore_x_norm": 0.4140625,
+    "bore_y_norm": 0.8972222222222223
+  },
+  "frame_00474.jpg": {
+    "bore_x": 547,
+    "bore_y": 638,
+    "bore_x_norm": 0.42734375,
+    "bore_y_norm": 0.8861111111111111
+  },
+  "frame_00477.jpg": {
+    "bore_x": 546,
+    "bore_y": 645,
+    "bore_x_norm": 0.4265625,
+    "bore_y_norm": 0.8958333333333334
+  },
+  "frame_00480.jpg": {
+    "bore_x": 547,
+    "bore_y": 642,
+    "bore_x_norm": 0.42734375,
+    "bore_y_norm": 0.8916666666666667
+  },
+  "frame_00483.jpg": {
+    "bore_x": 614,
+    "bore_y": 656,
+    "bore_x_norm": 0.4796875,
+    "bore_y_norm": 0.9111111111111111
+  },
+  "frame_00486.jpg": {
+    "bore_x": 621,
+    "bore_y": 658,
+    "bore_x_norm": 0.48515625,
+    "bore_y_norm": 0.9138888888888889
+  },
+  "frame_00489.jpg": {
+    "bore_x": 658,
+    "bore_y": 662,
+    "bore_x_norm": 0.5140625,
+    "bore_y_norm": 0.9194444444444444
+  },
+  "frame_00492.jpg": {
+    "bore_x": 640,
+    "bore_y": 360,
+    "bore_x_norm": 0.5,
+    "bore_y_norm": 0.5
+  },
+  "frame_00495.jpg": {
+    "bore_x": 661,
+    "bore_y": 659,
+    "bore_x_norm": 0.51640625,
+    "bore_y_norm": 0.9152777777777777
+  },
+  "frame_00498.jpg": {
+    "bore_x": 696,
+    "bore_y": 664,
+    "bore_x_norm": 0.54375,
+    "bore_y_norm": 0.9222222222222223
+  },
+  "frame_00501.jpg": {
+    "bore_x": 701,
+    "bore_y": 664,
+    "bore_x_norm": 0.54765625,
+    "bore_y_norm": 0.9222222222222223
+  },
+  "frame_00504.jpg": {
+    "bore_x": 715,
+    "bore_y": 666,
+    "bore_x_norm": 0.55859375,
+    "bore_y_norm": 0.925
+  },
+  "frame_00507.jpg": {
+    "bore_x": 744,
+    "bore_y": 666,
+    "bore_x_norm": 0.58125,
+    "bore_y_norm": 0.925
+  },
+  "frame_00510.jpg": {
+    "bore_x": 744,
+    "bore_y": 667,
+    "bore_x_norm": 0.58125,
+    "bore_y_norm": 0.9263888888888889
+  },
+  "frame_00513.jpg": {
+    "bore_x": 744,
+    "bore_y": 667,
+    "bore_x_norm": 0.58125,
+    "bore_y_norm": 0.9263888888888889
+  },
+  "frame_00516.jpg": {
+    "bore_x": 746,
+    "bore_y": 670,
+    "bore_x_norm": 0.5828125,
+    "bore_y_norm": 0.9305555555555556
+  },
+  "frame_00519.jpg": {
+    "bore_x": 746,
+    "bore_y": 670,
+    "bore_x_norm": 0.5828125,
+    "bore_y_norm": 0.9305555555555556
+  },
+  "frame_00522.jpg": {
+    "bore_x": 746,
+    "bore_y": 670,
+    "bore_x_norm": 0.5828125,
+    "bore_y_norm": 0.9305555555555556
+  },
+  "frame_00525.jpg": {
+    "bore_x": 714,
+    "bore_y": 658,
+    "bore_x_norm": 0.5578125,
+    "bore_y_norm": 0.9138888888888889
+  },
+  "frame_00528.jpg": {
+    "bore_x": 707,
+    "bore_y": 666,
+    "bore_x_norm": 0.55234375,
+    "bore_y_norm": 0.925
+  },
+  "frame_00531.jpg": {
+    "bore_x": 659,
+    "bore_y": 658,
+    "bore_x_norm": 0.51484375,
+    "bore_y_norm": 0.9138888888888889
+  },
+  "frame_00534.jpg": {
+    "bore_x": 664,
+    "bore_y": 659,
+    "bore_x_norm": 0.51875,
+    "bore_y_norm": 0.9152777777777777
+  },
+  "frame_00537.jpg": {
+    "bore_x": 642,
+    "bore_y": 659,
+    "bore_x_norm": 0.5015625,
+    "bore_y_norm": 0.9152777777777777
+  },
+  "frame_00540.jpg": {
+    "bore_x": 624,
+    "bore_y": 659,
+    "bore_x_norm": 0.4875,
+    "bore_y_norm": 0.9152777777777777
+  },
+  "frame_00543.jpg": {
+    "bore_x": 640,
+    "bore_y": 360,
+    "bore_x_norm": 0.5,
+    "bore_y_norm": 0.5
+  },
+  "frame_00546.jpg": {
+    "bore_x": 581,
+    "bore_y": 659,
+    "bore_x_norm": 0.45390625,
+    "bore_y_norm": 0.9152777777777777
+  },
+  "frame_00549.jpg": {
+    "bore_x": 579,
+    "bore_y": 656,
+    "bore_x_norm": 0.45234375,
+    "bore_y_norm": 0.9111111111111111
+  },
+  "frame_00552.jpg": {
+    "bore_x": 579,
+    "bore_y": 656,
+    "bore_x_norm": 0.45234375,
+    "bore_y_norm": 0.9111111111111111
+  },
+  "frame_00555.jpg": {
+    "bore_x": 536,
+    "bore_y": 651,
+    "bore_x_norm": 0.41875,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00558.jpg": {
+    "bore_x": 541,
+    "bore_y": 654,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9083333333333333
+  },
+  "frame_00561.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00564.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00567.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00570.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00573.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00576.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00579.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00582.jpg": {
+    "bore_x": 541,
+    "bore_y": 651,
+    "bore_x_norm": 0.42265625,
+    "bore_y_norm": 0.9041666666666667
+  },
+  "frame_00588.jpg": {
+    "bore_x": 131,
+    "bore_y": 597,
+    "bore_x_norm": 0.10234375,
+    "bore_y_norm": 0.8291666666666667
+  },
+  "frame_00591.jpg": {
+    "bore_x": 131,
+    "bore_y": 597,
+    "bore_x_norm": 0.10234375,
+    "bore_y_norm": 0.8291666666666667
+  },
+  "frame_00594.jpg": {
+    "bore_x": 131,
+    "bore_y": 597,
+    "bore_x_norm": 0.10234375,
+    "bore_y_norm": 0.8291666666666667
+  }
+}

@@ -1,0 +1,6 @@
+__pycache__/
+.ipynb_checkpoints/
+
+# Frame images (~155 MB). Regenerate from the Dropbox videos with extract_frames.py; labels.json files are kept.
+datasets/**/*.jpg
+cnn_data/**/*.jpg

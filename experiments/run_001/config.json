@@ -1,0 +1,16 @@
+{
+  "name": "baseline_frozen",
+  "note": "100 labeled cam1_z3.75x, frozen dinov2-s backbone",
+  "model": "facebook/dinov2-small",
+  "datasets": [
+    "cam1_z3.75x"
+  ],
+  "epochs": 30,
+  "lr": 0.0003,
+  "batch_size": 8,
+  "val_split": 0.15,
+  "n_train": 86,
+  "n_val": 15,
+  "run_id": "run_001",
+  "timestamp": "2026-10-06T17:17:07"
+}
