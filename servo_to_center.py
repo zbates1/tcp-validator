@@ -86,18 +86,25 @@ def _status(phase, e_xy, e_side, v=None):
     return s
 
 
-def _composite(panel_xy, panel_yz, status, height=540):
+def _composite(panel_xy, panel_yz, status, notice="", height=540):
     def _scale(img):
         h, w = img.shape[:2]
         return cv2.resize(img, (int(w * height / h), height))
     out = _scale(panel_xy) if panel_yz is None else np.hstack([_scale(panel_xy), _scale(panel_yz)])
     cv2.putText(out, status, (10, height - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+    if notice:   # last key result (calibration outcome, why SPACE was refused, ...) so it isn't only in the terminal
+        cv2.putText(out, notice, (10, height - 48), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 5)
+        cv2.putText(out, notice, (10, height - 48), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
     return out
 
 
 def calibrate(ctrl, grab_xy, grab_yz, last_tip):
     """Jog +X, +Y, +Z (translation only) and watch both cameras.
-    Returns {"xy_inv": 2x2, "side_pinv": 3x2, "kz": side rows per m of Z}, or None on failure."""
+    Returns ({"xy_inv": 2x2, "side_pinv": 3x2, "kz": side rows per m of Z} or None on failure, one-line message)."""
+    def fail(msg):
+        print("  " + msg)
+        return None, "Calibration failed: " + msg
+
     def snap():
         time.sleep(0.08)
         bs, ss = [], []
@@ -106,7 +113,7 @@ def calibrate(ctrl, grab_xy, grab_yz, last_tip):
             if b is not None: bs.append(b)
             if s is not None: ss.append(s)
             time.sleep(0.04)                      # let the stream deliver a new frame
-        med = lambda pts: tuple(np.median(pts, axis=0)) if len(pts) > CAL_FRAMES // 2 else None
+        med = lambda pts: tuple(float(x) for x in np.median(pts, axis=0)) if len(pts) > CAL_FRAMES // 2 else None
         return med(bs), med(ss)
 
     def jog(v):
@@ -125,8 +132,11 @@ def calibrate(ctrl, grab_xy, grab_yz, last_tip):
         b1, s1 = snap()
         jog([-u for u in unit])
         need_bottom = axis < 2                    # the Z jog only needs the side cam
-        if s0 is None or s1 is None or (need_bottom and (b0 is None or b1 is None)):
-            print(f"  Lost the tip on the +{name} jog (bottom {b0}->{b1}, side {s0}->{s1})"); return None
+        lost = [cam for cam, pts in (("bottom", (b0, b1) if need_bottom else ()), ("side", (s0, s1)))
+                if any(p is None for p in pts)]
+        if lost:
+            print(f"  bottom {b0}->{b1}, side {s0}->{s1}")
+            return fail(f"{' + '.join(lost)} cam lost the tip on the +{name} jog")
         if need_bottom:
             cols_xy.append(np.subtract(b1, b0) / CAL_DIST)
         cols_side.append(np.subtract(s1, s0) / CAL_DIST)
@@ -135,15 +145,16 @@ def calibrate(ctrl, grab_xy, grab_yz, last_tip):
 
     J_xy, J_side = np.column_stack(cols_xy), np.column_stack(cols_side)   # px per m: 2x2 (X,Y), 2x3 (X,Y,Z)
     if abs(np.linalg.det(J_xy * CAL_DIST)) < 1 or np.linalg.cond(J_xy) > 300:
-        print("  Bottom cam X/Y poorly conditioned — move needle and retry"); return None
+        return fail("bottom cam X/Y poorly conditioned - move needle and retry")
     kz = float(J_side[1, 2])
     if abs(kz * CAL_DIST) < 3:
-        print("  Side cam barely saw the Z jog — check the tip is in view and retry"); return None
+        return fail("side cam barely saw the Z jog - check the tip is in view and retry")
     if np.linalg.svd(J_side * CAL_DIST, compute_uv=False)[1] < 3:
-        print("  Side cam barely saw the X/Y jogs — can't pre-center horizontally"); return None
-    print(f"  bottom cam ~{np.mean(np.linalg.svd(J_xy, compute_uv=False)) / 1000:.1f} px/mm, "
-          f"side cam Z {abs(kz) / 1000:.1f} px/mm — press SPACE to servo")
-    return {"xy_inv": np.linalg.inv(J_xy), "side_pinv": np.linalg.pinv(J_side), "kz": kz}
+        return fail("side cam barely saw the X/Y jogs - can't pre-center horizontally")
+    msg = (f"Calibrated: bottom cam ~{np.mean(np.linalg.svd(J_xy, compute_uv=False)) / 1000:.1f} px/mm, "
+           f"side cam Z {abs(kz) / 1000:.1f} px/mm - press SPACE to servo")
+    print("  " + msg)
+    return {"xy_inv": np.linalg.inv(J_xy), "side_pinv": np.linalg.pinv(J_side), "kz": kz}, msg
 
 
 def set_zoom():
@@ -211,6 +222,7 @@ def main(arm=1):
 
     cal, armed, side_active, h_done, p0, last_phase = None, False, True, False, None, None
     last_tip, s_xy, s_yz = None, None, None
+    notice, view = "Click this window, then press c to calibrate", None
     prev_gray, lk_pt, lk_n = None, None, 0
 
     while True:
@@ -245,21 +257,30 @@ def main(arm=1):
         if key == ord("q"): break
         if key == 32:
             if cal is None:
-                print("Press c to calibrate first")
+                notice = "SPACE ignored: not calibrated yet - press c first"
             else:
                 armed = not armed
                 if armed:
                     set_zoom()
                     side_active, h_done, p0 = True, False, np.array(recv.getActualTCPPose()[:3])
-                print("SERVO", "ON" if armed else "OFF")
+                notice = "SERVO ON" if armed else "SERVO OFF"
+            print(notice)
         if key == ord("c"):
             armed = False
             ctrl.speedL([0]*6, ACCEL, STEP_TIME)
+            if view is not None:
+                cv2.imshow("servo", _composite(*view, "Calibrating... (window freezes ~5 s)"))
+                cv2.waitKey(1)
             set_zoom()
-            new_cal = calibrate(ctrl, grab_xy, grab_yz, last_tip)
+            new_cal, notice = calibrate(ctrl, grab_xy, grab_yz, last_tip)
             if new_cal is not None:
                 cal = new_cal
+            elif cal is not None:
+                notice += " (keeping previous calibration)"
+            for _ in range(100):                  # drop keys pressed while frozen, so a queued SPACE can't arm
+                if cv2.waitKey(1) == -1: break
         if key in JOGS:
+            if armed: notice = "Jogged - SERVO OFF"
             armed = False
             ctrl.speedL([j * MAX_SPEED for j in JOGS[key]], ACCEL, STEP_TIME)
             continue
@@ -277,13 +298,15 @@ def main(arm=1):
         panel_xy = draw_overlay(frame, stip, CX, CY, err, v[0], v[1], armed, circles, lk_mode)
         panel_yz = draw_side_overlay(side, syz, side_lines)
         status = _status(phase, e_xy, e_side, v) + ("" if cal else "   (press c to calibrate)")
-        cv2.imshow("servo", _composite(panel_xy, panel_yz, status))
+        view = (panel_xy, panel_yz, status)
+        cv2.imshow("servo", _composite(*view, notice))
 
         if armed:
             moved = float(np.linalg.norm(np.array(recv.getActualTCPPose()[:3]) - p0))
             if moved > TRAVEL_LIMIT:
                 armed = False
-                print(f"TCP moved {moved*1e3:.1f} mm since arming (limit {TRAVEL_LIMIT*1e3:.0f} mm) — SERVO OFF")
+                notice = f"TCP moved {moved*1e3:.1f} mm since arming (limit {TRAVEL_LIMIT*1e3:.0f} mm) - SERVO OFF"
+                print(notice)
         ctrl.speedL(v if armed else [0]*6, ACCEL, STEP_TIME)
 
         if armed and phase != last_phase:
