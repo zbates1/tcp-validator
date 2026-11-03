@@ -328,7 +328,7 @@ def draw_overlay(frame, tip, cx, cy, err, vx, vy, armed, circles=None,
     texts = [
         (det_str,                                          (0, 200, 255)),
         (f"vx={vx*1e3:.1f}  vy={vy*1e3:.1f} mm/s",        (200, 200, 200)),
-        ("SPACE=servo  c=calibrate  wasd/rf=jog  q=quit",  (180, 180, 0)),
+        ("z=align Z  c=cal XY  SPACE=center XY  wasd/rf=jog  q=quit",  (180, 180, 0)),
         (">>> MOVING <<<" if armed else "--- PAUSED ---",  (0, 80, 255) if armed else (100, 100, 100)),
     ]
     for i, (txt, col) in enumerate(texts):

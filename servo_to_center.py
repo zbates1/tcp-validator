@@ -11,62 +11,47 @@ YZ_ZOOM   = 1.0        # side detection was tested at 1x
 ARM_IPS   = {1: "192.168.0.3", 2: "192.168.0.4", 3: "192.168.0.5"}   # --arm N, same numbering as the GUI
 ARM_ROLES = {1: "extruder", 2: "light pipe", 3: "pick-and-place"}
 
-GAIN         = 3.0     # 1/s — commanded speed = GAIN x remaining distance (from the calibrated Jacobians)
+GAIN         = 3.0     # 1/s — XY speed = GAIN x remaining distance (from the calibrated bottom-cam Jacobian)
 DEAD_BAND    = 5       # px — XY done within this radius of the bottom-cam crosshair
-Z_DEAD_BAND  = 5       # px — side-cam rows; Z is re-checked after XY and re-entered past 2x this
-SIDE_H_TOL   = 50      # px — side-cam columns; only a coarse pre-center, the bottom cam owns X/Y
-MAX_SPEED    = 0.020   # m/s (20 mm/s)
+Z_DEAD_BAND  = 5       # px — Z done when the shaft bottom is within this many rows of the side-cam center row
+Z_GAIN       = 3e-5    # m/s per px of side-cam row error (100 px -> 3 mm/s). Only up/down is needed, no calibration
+Z_MIN_SPEED  = 0.0003  # m/s — so the last few px don't crawl
+Z_MAX_SPEED  = 0.003   # m/s
+SIDE_FLIPPED = False   # True if the side cam is upside down (tip goes DOWN on screen when the arm goes up)
+MAX_SPEED    = 0.020   # m/s (20 mm/s) — XY servo cap and manual jog speed
 ACCEL        = 0.5     # m/s²
 STEP_TIME    = 0.10    # s per speedL command
 CAL_DIST     = 0.0005  # m per calibration jog (0.5 mm); each snapshot is a median of CAL_FRAMES detections
 CAL_FRAMES   = 5       # so the few-px side-cam shift isn't swamped by single-frame noise
-TRAVEL_LIMIT = 0.010   # m — servo disarms if the TCP moves further than this from where it was armed
+TRAVEL_LIMIT = 0.010   # m — z/SPACE stop if the TCP moves further than this from where they started
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def servo_phase(e_xy, e_side, side_active, h_done):
-    """Decide which camera drives this frame.
-    SIDE: shaft bottom onto the side cam's center row (tight, robot Z) and near its center column (coarse, first
-          pass only). XY: bottom cam centers the bore. Z is re-checked after XY so both end inside their dead bands.
-    e_xy / e_side: (cols, rows) from tip to that camera's crosshair, or None if not detected.
-    Returns (phase, side_active, h_done)."""
-    if e_side is not None:
-        eu, ev = e_side
-        h_done = h_done or abs(eu) < SIDE_H_TOL
-        if side_active and h_done and abs(ev) < Z_DEAD_BAND:
-            side_active = False
-        elif not side_active and abs(ev) > 2 * Z_DEAD_BAND:
-            side_active = True
-    if side_active:
-        return ("SIDE" if e_side is not None else "SIDE: no side detection"), side_active, h_done
-    if e_xy is None:
-        return "XY: no bore detection", side_active, h_done
-    if np.hypot(*e_xy) >= DEAD_BAND:
-        return "XY", side_active, h_done
-    if e_side is None:
-        return "XY done: no side detection", side_active, h_done
-    if abs(e_side[1]) < Z_DEAD_BAND:
-        return "CENTERED", side_active, h_done
-    return "SIDE", True, h_done      # XY done but Z drifted inside the hysteresis band: touch Z up
+def z_velocity(e_side):
+    """Step 1 (z key): robot Z only, from the side cam's row error. Up/down is known, so no calibration.
+    e_side: (cols, rows) from the shaft bottom to the side-cam crosshair; rows > 0 means the tip is above center."""
+    ev = e_side[1]
+    speed = float(np.clip(Z_GAIN * abs(ev), Z_MIN_SPEED, Z_MAX_SPEED))
+    down = (ev > 0) != SIDE_FLIPPED
+    return [0.0, 0.0, -speed if down else speed, 0.0, 0.0, 0.0]
 
 
-def servo_velocity(phase, e_xy, e_side, h_done, cal):
-    """speedL vector for the phase. Translation only — the needle is never rotated."""
-    if phase == "SIDE":
-        eu, ev = e_side
-        if h_done:
-            d = np.array([0.0, 0.0, ev / cal["kz"]])                 # pure robot Z
-        else:
-            d = cal["side_pinv"] @ np.array([eu, ev], dtype=float)   # smallest XYZ move in the side cam's view plane
-    elif phase == "XY":
-        d = np.append(cal["xy_inv"] @ np.asarray(e_xy, dtype=float), 0.0)
-    else:
-        return [0.0] * 6
-    v = GAIN * d
+def xy_velocity(e_xy, cal):
+    """Step 3 (SPACE): robot X/Y only, from the bottom cam through the calibrated Jacobian. Z and rotation stay put."""
+    v = GAIN * (cal["xy_inv"] @ np.asarray(e_xy, dtype=float))
     n = float(np.linalg.norm(v))
     if n > MAX_SPEED:
         v *= MAX_SPEED / n
-    return [float(v[0]), float(v[1]), float(v[2]), 0.0, 0.0, 0.0]
+    return [float(v[0]), float(v[1]), 0.0, 0.0, 0.0, 0.0]
+
+
+def _would_do(e_xy, e_side):
+    """Offline replay: which step would be moving on this frame."""
+    if e_side is not None and abs(e_side[1]) >= Z_DEAD_BAND:
+        return "Z (step 1)"
+    if e_xy is None:
+        return "XY: no bore detection"
+    return "XY (step 3)" if np.hypot(*e_xy) >= DEAD_BAND else "CENTERED"
 
 
 def _ema(prev, tip):
@@ -98,23 +83,22 @@ def _composite(panel_xy, panel_yz, status, notice="", height=540):
     return out
 
 
-def calibrate(ctrl, grab_xy, grab_yz, last_tip):
-    """Jog +X, +Y, +Z (translation only) and watch both cameras.
-    Returns ({"xy_inv": 2x2, "side_pinv": 3x2, "kz": side rows per m of Z} or None on failure, one-line message)."""
+def calibrate(ctrl, grab_xy, last_tip):
+    """Step 2 (c key): jog +X and +Y (translation only) and watch the bottom cam. The side cam isn't used: it only
+    drives Z, and up/down needs no calibration.
+    Returns ({"xy_inv": 2x2 m per px} or None on failure, one-line message)."""
     def fail(msg):
         print("  " + msg)
         return None, "Calibration failed: " + msg
 
     def snap():
         time.sleep(0.08)
-        bs, ss = [], []
+        pts = []
         for _ in range(CAL_FRAMES):
-            b, s = detect_bottom(grab_xy(), last_tip)[0], detect_side(grab_yz())[0]
-            if b is not None: bs.append(b)
-            if s is not None: ss.append(s)
+            b = detect_bottom(grab_xy(), last_tip)[0]
+            if b is not None: pts.append(b)
             time.sleep(0.04)                      # let the stream deliver a new frame
-        med = lambda pts: tuple(float(x) for x in np.median(pts, axis=0)) if len(pts) > CAL_FRAMES // 2 else None
-        return med(bs), med(ss)
+        return tuple(float(x) for x in np.median(pts, axis=0)) if len(pts) > CAL_FRAMES // 2 else None
 
     def jog(v):
         spd = 0.0025                              # 2.5 mm/s -> 0.2 s per 0.5 mm jog
@@ -122,39 +106,29 @@ def calibrate(ctrl, grab_xy, grab_yz, last_tip):
         ctrl.speedL([x * spd for x in v], ACCEL, t)
         time.sleep(t + 0.15)
 
-    print(f"Calibrating — keep the tip in both views (jogs +X, +Y, +Z by {CAL_DIST*1000:g} mm, translation only)...")
-    cols_xy, cols_side = [], []
-    for axis, name in enumerate("XYZ"):
-        b0, s0 = snap()
+    print(f"Calibrating XY — keep the bore in the bottom view (jogs +X, +Y by {CAL_DIST*1000:g} mm, translation only)...")
+    cols = []
+    for axis, name in enumerate("XY"):
+        b0 = snap()
         unit = [0.0] * 6
         unit[axis] = 1.0
         jog(unit)
-        b1, s1 = snap()
+        b1 = snap()
         jog([-u for u in unit])
-        need_bottom = axis < 2                    # the Z jog only needs the side cam
-        lost = [cam for cam, pts in (("bottom", (b0, b1) if need_bottom else ()), ("side", (s0, s1)))
-                if any(p is None for p in pts)]
-        if lost:
-            print(f"  bottom {b0}->{b1}, side {s0}->{s1}")
-            return fail(f"{' + '.join(lost)} cam lost the tip on the +{name} jog")
-        if need_bottom:
-            cols_xy.append(np.subtract(b1, b0) / CAL_DIST)
-        cols_side.append(np.subtract(s1, s0) / CAL_DIST)
-        bottom_px = tuple(int(x) for x in np.subtract(b1, b0)) if need_bottom else "-"
-        print(f"  +{name}: bottom {bottom_px}px  side {tuple(int(x) for x in np.subtract(s1, s0))}px")
+        if b0 is None or b1 is None:
+            print(f"  bottom {b0}->{b1}")
+            return fail(f"bottom cam lost the bore on the +{name} jog")
+        d = np.subtract(b1, b0)
+        cols.append(d / CAL_DIST)
+        print(f"  +{name}: bottom ({d[0]:+.1f}, {d[1]:+.1f})px")
 
-    J_xy, J_side = np.column_stack(cols_xy), np.column_stack(cols_side)   # px per m: 2x2 (X,Y), 2x3 (X,Y,Z)
+    J_xy = np.column_stack(cols)                  # px per m, 2x2 (robot X, Y)
     if abs(np.linalg.det(J_xy * CAL_DIST)) < 1 or np.linalg.cond(J_xy) > 300:
         return fail("bottom cam X/Y poorly conditioned - move needle and retry")
-    kz = float(J_side[1, 2])
-    if abs(kz * CAL_DIST) < 3:
-        return fail("side cam barely saw the Z jog - check the tip is in view and retry")
-    if np.linalg.svd(J_side * CAL_DIST, compute_uv=False)[1] < 3:
-        return fail("side cam barely saw the X/Y jogs - can't pre-center horizontally")
-    msg = (f"Calibrated: bottom cam ~{np.mean(np.linalg.svd(J_xy, compute_uv=False)) / 1000:.1f} px/mm, "
-           f"side cam Z {abs(kz) / 1000:.1f} px/mm - press SPACE to servo")
+    msg = (f"XY calibrated: bottom cam ~{np.mean(np.linalg.svd(J_xy, compute_uv=False)) / 1000:.1f} px/mm. "
+           f"Step 3: press SPACE to center XY")
     print("  " + msg)
-    return {"xy_inv": np.linalg.inv(J_xy), "side_pinv": np.linalg.pinv(J_side), "kz": kz}, msg
+    return {"xy_inv": np.linalg.inv(J_xy)}, msg
 
 
 def set_zoom():
@@ -211,18 +185,20 @@ def main(arm=1):
         grab_xy = lambda: strip_crosshair(raw_xy())
         grab_yz = lambda: strip_crosshair(raw_yz())
     print(f"XY = cam{XY_CAM} (left panel), YZ = cam{YZ_CAM} (right panel) — swap XY_CAM/YZ_CAM if they look wrong")
-    print(f"Zoom set on the Pi: XY {XY_ZOOM}x, side {YZ_ZOOM}x (re-applied before calibrating and when arming)")
-    print("Side cam first (Z exact, horizontal coarse), then the bottom cam centers X/Y. Translation only.")
-    print("WASD=jog XY  r/f=jog Z  c=calibrate (required before servo)  SPACE=servo  q=quit")
+    print(f"Zoom set on the Pi: XY {XY_ZOOM}x, side {YZ_ZOOM}x (re-applied before calibrating and centering)")
+    print("Step 1: z = side cam moves robot Z until the shaft bottom is on its center row (no calibration)")
+    print("Step 2: c = calibrate XY (+X/+Y jogs, bottom cam only)")
+    print("Step 3: SPACE = bottom cam centers X/Y. Translation only, Z untouched.")
+    print("WASD=jog XY  r/f=jog Z  z/SPACE again or any jog = stop  q=quit")
     cv2.namedWindow("servo", cv2.WINDOW_NORMAL)
 
     JOGS = {ord('w'): [0,1,0,0,0,0], ord('s'): [0,-1,0,0,0,0],
             ord('a'): [-1,0,0,0,0,0], ord('d'): [1,0,0,0,0,0],
             ord('r'): [0,0,1,0,0,0], ord('f'): [0,0,-1,0,0,0]}
 
-    cal, armed, side_active, h_done, p0, last_phase = None, False, True, False, None, None
+    cal, mode, p0, z_best, last_phase = None, None, None, None, None    # mode: None, "Z" (step 1) or "XY" (step 3)
     last_tip, s_xy, s_yz = None, None, None
-    notice, view = "Click this window, then press c to calibrate", None
+    notice, view = "Click this window. Step 1: press z to align Z", None
     prev_gray, lk_pt, lk_n = None, None, 0
 
     while True:
@@ -249,39 +225,47 @@ def main(arm=1):
         prev_gray = curr_gray
         s_xy = _ema(s_xy, tip)
 
-        # ── Side cam: bottom of shaft -> Z (+ coarse horizontal) ─────────────
+        # ── Side cam: bottom of shaft -> Z ───────────────────────────────────
         tip_yz, side_lines = detect_side(side)
         s_yz = _ema(s_yz, tip_yz)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"): break
-        if key == 32:
-            if cal is None:
-                notice = "SPACE ignored: not calibrated yet - press c first"
+        if key == ord("z"):
+            if mode == "Z":
+                mode, notice = None, "Z align stopped"
             else:
-                armed = not armed
-                if armed:
-                    set_zoom()
-                    side_active, h_done, p0 = True, False, np.array(recv.getActualTCPPose()[:3])
-                notice = "SERVO ON" if armed else "SERVO OFF"
+                set_zoom()
+                mode, p0, z_best = "Z", np.array(recv.getActualTCPPose()[:3]), None
+                notice = "Step 1: moving Z until the shaft bottom is on the side cam's center row..."
+            print(notice)
+        if key == 32:
+            if mode == "XY":
+                mode, notice = None, "XY centering stopped"
+            elif cal is None:
+                notice = "SPACE ignored: XY not calibrated yet - press c first (step 2)"
+            else:
+                set_zoom()
+                mode, p0 = "XY", np.array(recv.getActualTCPPose()[:3])
+                notice = "Step 3: centering XY..."
             print(notice)
         if key == ord("c"):
-            armed = False
+            mode = None
             ctrl.speedL([0]*6, ACCEL, STEP_TIME)
             if view is not None:
-                cv2.imshow("servo", _composite(*view, "Calibrating... (window freezes ~5 s)"))
+                cv2.imshow("servo", _composite(*view, "Calibrating XY... (window freezes ~3 s)"))
                 cv2.waitKey(1)
             set_zoom()
-            new_cal, notice = calibrate(ctrl, grab_xy, grab_yz, last_tip)
+            new_cal, notice = calibrate(ctrl, grab_xy, last_tip)
             if new_cal is not None:
                 cal = new_cal
             elif cal is not None:
                 notice += " (keeping previous calibration)"
-            for _ in range(100):                  # drop keys pressed while frozen, so a queued SPACE can't arm
+            for _ in range(100):                  # drop keys pressed while frozen, so a queued SPACE can't start
                 if cv2.waitKey(1) == -1: break
         if key in JOGS:
-            if armed: notice = "Jogged - SERVO OFF"
-            armed = False
+            if mode: notice = "Jogged - stopped"
+            mode = None
             ctrl.speedL([j * MAX_SPEED for j in JOGS[key]], ACCEL, STEP_TIME)
             continue
 
@@ -289,31 +273,55 @@ def main(arm=1):
         CX, CY = W // 2, H // 2
         e_xy   = (CX - s_xy[0], CY - s_xy[1]) if s_xy is not None else None
         e_side = (side.shape[1] // 2 - s_yz[0], side.shape[0] // 2 - s_yz[1]) if s_yz is not None else None
-        phase, side_active, h_done = servo_phase(e_xy, e_side, side_active, h_done)
-        v = servo_velocity(phase, e_xy, e_side, h_done, cal) if cal else [0.0] * 6
+
+        v, phase = [0.0] * 6, "idle"
+        if mode == "Z":
+            if e_side is None:
+                phase = "Z: side cam can't see the needle"
+            else:
+                ev = abs(e_side[1])
+                z_best = ev if z_best is None else min(z_best, ev)
+                if ev < Z_DEAD_BAND:
+                    mode, phase = None, "Z ALIGNED"
+                    notice = "Z aligned. Step 2: press c to calibrate XY (or SPACE if already calibrated)"
+                    print(notice)
+                    print("  TCP pose:", [round(float(p), 5) for p in recv.getActualTCPPose()])
+                elif ev > z_best + 30:            # getting further away: the side cam's up/down is the other way
+                    mode, phase = None, "Z STOPPED"
+                    notice = "Z moved the wrong way - set SIDE_FLIPPED = True in servo_to_center.py"
+                    print(notice)
+                else:
+                    phase, v = "Z", z_velocity(e_side)
+        elif mode == "XY":
+            if e_xy is None:
+                phase = "XY: no bore detection"
+            elif np.hypot(*e_xy) < DEAD_BAND:
+                phase = "CENTERED"
+            else:
+                phase, v = "XY", xy_velocity(e_xy, cal)
 
         stip = (int(s_xy[0]), int(s_xy[1])) if s_xy is not None else None
         syz  = (int(s_yz[0]), int(s_yz[1])) if s_yz is not None else None
         err  = float(np.hypot(*e_xy)) if e_xy is not None else float("inf")
-        panel_xy = draw_overlay(frame, stip, CX, CY, err, v[0], v[1], armed, circles, lk_mode)
+        panel_xy = draw_overlay(frame, stip, CX, CY, err, v[0], v[1], mode is not None, circles, lk_mode)
         panel_yz = draw_side_overlay(side, syz, side_lines)
-        status = _status(phase, e_xy, e_side, v) + ("" if cal else "   (press c to calibrate)")
+        status = _status(phase, e_xy, e_side, v)
         view = (panel_xy, panel_yz, status)
         cv2.imshow("servo", _composite(*view, notice))
 
-        if armed:
+        if mode:
             moved = float(np.linalg.norm(np.array(recv.getActualTCPPose()[:3]) - p0))
             if moved > TRAVEL_LIMIT:
-                armed = False
-                notice = f"TCP moved {moved*1e3:.1f} mm since arming (limit {TRAVEL_LIMIT*1e3:.0f} mm) - SERVO OFF"
+                mode, v = None, [0.0] * 6
+                notice = f"TCP moved {moved*1e3:.1f} mm since starting (limit {TRAVEL_LIMIT*1e3:.0f} mm) - stopped"
                 print(notice)
-        ctrl.speedL(v if armed else [0]*6, ACCEL, STEP_TIME)
+        ctrl.speedL(v, ACCEL, STEP_TIME)
 
-        if armed and phase != last_phase:
+        if mode and phase != last_phase:
             print(_status(phase, e_xy, e_side, v), flush=True)
             if phase == "CENTERED":
                 print("  TCP pose at center:", [round(float(p), 5) for p in recv.getActualTCPPose()])
-        last_phase = phase if armed else None
+        last_phase = phase if mode else None
 
     stop.set()
     ctrl.speedL([0]*6, ACCEL)
@@ -340,8 +348,6 @@ def test_video(xy_path, yz_path=None):
     lk_pt       = None
     lk_n        = 0
     det_mode    = 0    # 0 = center/tip  1 = radius/edge  (toggle with 'm')
-    side_active = True
-    h_done      = False
 
     while True:
         if not paused:
@@ -351,7 +357,7 @@ def test_video(xy_path, yz_path=None):
                 cap_xy.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 if cap_yz:
                     cap_yz.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                prev_gray = None; lk_pt = None; lk_n = 0; side_active, h_done = True, False
+                prev_gray = None; lk_pt = None; lk_n = 0
                 continue
             if cap_yz:
                 ok_yz, frame_yz = cap_yz.read()
@@ -399,8 +405,7 @@ def test_video(xy_path, yz_path=None):
 
         e_xy   = (CX - tip[0], CY - tip[1]) if tip else None
         e_side = (frame_yz.shape[1] // 2 - tip_yz[0], frame_yz.shape[0] // 2 - tip_yz[1]) if tip_yz else None
-        phase, side_active, h_done = servo_phase(e_xy, e_side, side_active, h_done)
-        cv2.imshow("test", _composite(panel_xy, panel_yz, "would do: " + _status(phase, e_xy, e_side)))
+        cv2.imshow("test", _composite(panel_xy, panel_yz, "would do: " + _status(_would_do(e_xy, e_side), e_xy, e_side)))
         key = cv2.waitKey(30) & 0xFF
         if key == ord("q"): break
         if key == 32: paused = not paused
@@ -411,7 +416,7 @@ def test_video(xy_path, yz_path=None):
         if key == ord("r"):
             cap_xy.set(cv2.CAP_PROP_POS_FRAMES, 0)
             if cap_yz: cap_yz.set(cv2.CAP_PROP_POS_FRAMES, 0)
-            prev_gray = None; lk_pt = None; lk_n = 0; side_active, h_done = True, False
+            prev_gray = None; lk_pt = None; lk_n = 0
 
     cap_xy.release()
     if cap_yz: cap_yz.release()
